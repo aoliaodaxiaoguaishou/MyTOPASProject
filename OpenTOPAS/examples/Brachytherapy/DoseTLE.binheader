@@ -1,0 +1,10 @@
+# TOPAS Version: 4.0
+# Parameter File: DoseTLE.txt
+# Results for scorer: DoseOnRTGrid
+# Filtered by: OnlyIncludeParticlesNamed = 1 "gamma"
+# Scored in component: DoseGrid
+# X in 201 bins of 0.1 cm
+# Y in 201 bins of 0.1 cm
+# Z in 201 bins of 0.1 cm
+# TrackLengthEstimator ( Gy ) : Sum   
+# Binary file: DoseTLE.bin

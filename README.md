@@ -1,83 +1,118 @@
 # MyTOPASProject
 The pipeline couples track-structure Monte Carlo simulation in realistic ellipsoidal cell/nucleus geometries with mechanistic DNA repair/misrepair modeling, enabling dose–response analysis before and after repair under low-dose-rate internal irradiation.
-> [!NOTE]
-> This repository is a **research code bundle** for reproducible Monte Carlo radiobiology studies built on **OpenTOPAS + TOPAS-nBio + TOPAS-CellModels**.  
-> Key custom additions include **regular multi-cell arrangement at the bottom of a medium**, **ellipsoidal cell/nucleus geometry**, **ellipsoidal cell membrane/cytoplasm**, and an **ellipsoidal phase-space scoring surface** on the target nucleus.
 
-# MyTOPASProject
 
-This project couples **track-structure Monte Carlo simulation** in realistic **ellipsoidal cell/nucleus geometries** with downstream **DNA damage / repair / misrepair analysis**, enabling **dose–response characterization** for low-dose-rate internal irradiation scenarios.
+This repository supports **low-dose-rate internal irradiation** studies by coupling **track-structure Monte Carlo simulation** (OpenTOPAS / TOPAS-nBio / TOPAS-CellModels) with downstream **DNA damage analysis** (and optionally repair/misrepair modeling), enabling **dose–response characterization** in realistic **ellipsoidal cell/nucleus geometries**.
+
+---
+
+## Key custom features (implemented in this project)
+
+Compared with stock components, this project includes custom implementations for:
+
+- **Regular multi-cell arrangement** on the **bottom of the culture medium**
+- **Ellipsoidal phase-space scoring surface** on/around the **target nucleus**  
+  (used to collect particles reaching the target ellipsoidal surface)
+- **Ellipsoidal cell membrane/cytoplasm**
+- **Ellipsoidal nucleus**
 
 ---
 
 ## Repository layout
 
 - `OpenTOPAS/`  
-  OpenTOPAS source code (included for reproducibility).
+  OpenTOPAS source code (included for reproducibility)
 
 - `TOPAS-nBio/`  
-  TOPAS-nBio extension (sub-cellular radiobiology framework).
+  TOPAS-nBio extension (sub-cellular radiobiology framework)
 
 - `TOPAS-CellModels/`  
-  Cell modeling extension (cell/nucleus/membrane-related geometries).
+  Cell model extension (cell/nucleus/membrane geometries)
 
 - `geant4/`  
-  Geant4 source (included for reproducibility / local builds depending on your workflow).
+  Geant4 source code (included for reproducibility)
 
-- Python helper scripts (project-specific):
+- Project Python scripts (workflow entry points)
   - `process_phsp.py`  
     **Data collection & summarization**.  
-    Used to collect:
-    1) particle information reaching the **target ellipsoidal phase-space surface** (on/around the nucleus), and  
-    2) information related to **DNA damage** induced in the nucleus after irradiation,  
-    then exports **tables** for convenient statistics (e.g., CSV/Excel-style summaries).
+    This script is used to:
+    1) collect particle information reaching the **target ellipsoidal phase-space surface**, and  
+    2) collect information related to **nuclear DNA damage** induced by irradiation,  
+    then export **structured tables** for convenient statistics and plotting.
 
   - `beta_medium_topasfile.py`  
-    Generates TOPAS input for the scenario: **β electrons emitted by radionuclides in the culture medium** → scored on the **target nucleus surface phase space**.
+    Scenario: **β electrons** emitted by radionuclides in the **culture medium** → scored on the **target nucleus surface phase space**.
 
   - `IC_medium_topasfile.py`  
-    Generates TOPAS input for the scenario: **IC (internal conversion) electrons emitted by radionuclides in the culture medium** → scored on the **target nucleus surface phase space**.
+    Scenario: **IC (internal conversion) electrons** emitted by radionuclides in the **culture medium** → scored on the **target nucleus surface phase space**.
 
   - `beta_cell_topasfile.py`  
-    Generates TOPAS input for the scenario: **β electrons emitted by radionuclides in the target cell and surrounding cells** (typically **cytoplasm**, and can also represent **membrane** depending on the configuration) → scored on the **target nucleus surface phase space**.
+    Scenario: **β electrons** emitted by radionuclides in the **target cell and surrounding cells** (typically **cytoplasm**, and can also represent **membrane** depending on configuration)  
+    → scored on the **target nucleus surface phase space**.
 
   - `IC_cell_topasfile.py`  
-    Generates TOPAS input for the scenario: **IC electrons emitted by radionuclides in the target cell and surrounding cells** (typically **cytoplasm**, and can also represent **membrane** depending on the configuration) → scored on the **target nucleus surface phase space**.
+    Scenario: **IC electrons** emitted by radionuclides in the **target cell and surrounding cells** (typically **cytoplasm**, and can also represent **membrane** depending on configuration)  
+    → scored on the **target nucleus surface phase space**.
+
+> Note: With appropriate parameter settings, `beta_cell_topasfile.py` and `IC_cell_topasfile.py` can also represent radionuclide distributions in the **cell membrane** (instead of cytoplasm).
 
 ---
 
-## What is custom in this project
+## Typical pipeline
 
-Compared with stock extensions, this project includes custom implementations for:
+1. **Generate TOPAS input** using one of:
+   - `beta_medium_topasfile.py`
+   - `IC_medium_topasfile.py`
+   - `beta_cell_topasfile.py`
+   - `IC_cell_topasfile.py`
 
-- **Regular multi-cell arrangement** on the **bottom of the culture medium** (ordered cell layout)
-- **Ellipsoidal phase-space scoring surface** (for collecting particles incident on the nucleus boundary)
-- **Ellipsoidal cell membrane/cytoplasm**
-- **Ellipsoidal nucleus**
+2. **Run OpenTOPAS** with the generated parameter file(s) to produce:
+   - phase-space outputs on the **target ellipsoidal surface**
+   - DNA damage outputs (depending on your scoring configuration)
 
-These components are intended to better match realistic cell morphology and to support consistent phase-space based downstream analysis.
+3. **Post-process / summarize** using `process_phsp.py` to obtain structured tables for statistics and plotting.
+
+> [!NOTE]
+> The exact output paths / naming conventions depend on how you set parameters inside each script and which TOPAS scoring blocks you enable. If you change output directories or file name prefixes, keep the post-processing script consistent.
 
 ---
 
-## Build & installation (recommended workflow)
+## Quick start
 
-> [!TIP]
-> If you are on Debian/Ubuntu, use the provided quick start file:
-> **`OpenTOPAS_quickStart_Debian.md`** (install deps → build Geant4/OpenTOPAS → run a first demo).
+- For Debian/Ubuntu, follow:
+  - `OpenTOPAS_quickStart_Debian.md`
 
-### Build OpenTOPAS with extensions in this repo
+> If you already have your own OpenTOPAS build workflow, make sure the build/runtime configuration properly enables the `TOPAS-nBio` and `TOPAS-CellModels` extensions.
 
-When configuring OpenTOPAS, include extensions via `TOPAS_EXTENSIONS_DIR`.
+---
 
-Example (from repository root):
+## Reproducibility tips (recommended)
 
-```bash
-mkdir -p OpenTOPAS-build
-cd OpenTOPAS-build
+To make results easier to reproduce, consider recording the following in your notes / issues / supplementary material:
 
-# NOTE: Use '\;' between multiple extension paths (GitHub README callout style)
-cmake ../OpenTOPAS \
-  -DCMAKE_INSTALL_PREFIX=../OpenTOPAS-install \
-  -DTOPAS_EXTENSIONS_DIR=../TOPAS-nBio\;../TOPAS-CellModels
+- OS / compiler / CMake versions
+- Geant4 / OpenTOPAS / TOPAS-nBio versions (or commit IDs)
+- key physics list + cuts/steps + scoring configuration summary
+- random seed strategy and number of histories
+- output directory structure (phase space vs. damage outputs)
 
-make -j8 install
+---
+
+## References & acknowledgements
+
+- OpenTOPAS documentation: https://opentopas.readthedocs.io/
+- TOPAS-nBio documentation: https://topas-nbio.readthedocs.io/
+- Geant4: https://geant4.org/
+
+If you use TOPAS-nBio in publications, please cite the TOPAS-nBio reference listed in the TOPAS-nBio repository documentation.
+
+---
+
+## Bugs / contact
+
+If you encounter issues, please open a GitHub Issue with:
+
+- your OS + compiler + CMake version
+- build log snippet (or runtime error log)
+- minimal input needed to reproduce the issue (minimal parameter file + relevant scripts/data)
+
